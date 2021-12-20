@@ -1,0 +1,7 @@
+---
+- name: lsa_test_01
+  hosts: centos_srv
+  become: True
+  tasks:
+    - name: install epel repository
+      yum: name=epel-release update_cache=yes

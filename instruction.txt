@@ -1,0 +1,60 @@
+1) create 2 VMs
+	CENTOS centos/8
+	UBUNTU ubuntu/focal64
+ - vagrant (see 'Vagrantfile')
+
+2) create a separate volume on CENTOS
+ - vagrant (string 19 - 28, VBoxManage commands, used by Vagrant)
+
+3) format it as a ZFS file system, mount locally to /share
+ - sudo yum install -y epel-release (install enterprise repository)
+ - sudo yum install https://zfsonlinux.org/epel/zfs-release.el8_5.noarch.rpm
+ - sudo yum update
+ - sudo yum install zfs
+ - sudo yum reinstall kernel* (in the some cases need to reinstall kernel)
+ - reboot system
+ - sudo /usr/sbin/modprobe zfs (starting zfs module)
+
+ - sudo fdisk -l (to see /dev/sdb) or - sudo lsblk
+ - sudo sfdisk /dev/sdb (creating partition sdb1)
+ - sudo zpool create -f pool0 /dev/sdb1
+ - sudo zfs create pool0/share (creating zfs filesystem)
+
+ - sudo zfs get all pool0/share (or - sudo zfs get mountpoint pool0/share) (how to see mountpoint)
+ - sudo zfs set mountpoint=/share pool0/share (mount locally to /share)
+
+4) share it via NFS
+ - sudo dnf install nfs-utils (if needed)
+ - sudo systemctl start nfs-server.service
+   sudo systemctl enable nfs-server.service
+   sudo systemctl status nfs-server.service
+ - sudo nano /etc/exports (write out this string:/share 10.11.10.2/24(rw,sync,no_subtree_check))
+ - sudo exportfs -arv (to accsept changes)
+
+5) mount it on UBUNTU machine to UBUNTU:/share
+ - sudo apt install nfs-common
+ - sudo mkdir /share
+ - sudo mount 10.11.10.1:/share /share
+ - df -h (to see mounted filesystem) - 10.11.10.1:/share   19G   11G  8.9G  53% /share
+
+6) on CENTOS create a 2Gb size file:  /share/2gb_file
+ - sudo dd if=/dev/zero of=/share/10gb_file count=20M (it copies 512*1024*1024 bytes  - 10737418240 bytes (11 GB, 10 GiB) copied, 197.949 s, 54.2 MB/s)
+
+7) copy it locally (on CENTOS) to /tmp
+ - некорректная постановка задачи, см. сл. пункт (решение 2 в 1)
+8) measure copy time, how long did it take?
+ - time cp /share/2gb_file /tmp
+
+9) copy it on UBUNTU to /tmp
+ - некорректная постановка задачи, см. сл. пункт (решение 2 в 1)
+
+10 measure copy time, how long did it take?
+ - time cp /share/2gb_file /tmp
+
+11) check 2 ways to improve the copy time on UBUNTU (via NFS)
+ - https://cromwell-intl.com/open-source/performance-tuning/nfs.html
+
+ - mountstats /share
+ - 
+
+12) provide full command history with the explanations (comments included to this text)
